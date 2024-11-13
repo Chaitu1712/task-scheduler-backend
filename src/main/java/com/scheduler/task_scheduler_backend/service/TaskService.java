@@ -4,6 +4,7 @@ import com.scheduler.task_scheduler_backend.model.Task;
 import com.scheduler.task_scheduler_backend.model.Task.TaskStatus;
 import com.scheduler.task_scheduler_backend.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -66,13 +67,39 @@ public class TaskService {
         }).orElseThrow(() -> new IllegalArgumentException("Task with ID " + id + " not found"));
     }
     // Reschedule a task to the next day and set status to OVERDUE
-    public Task rescheduleTask(Long id) {
-        return taskRepository.findById(id).map(task -> {
-            // Set the deadline to the next day
-            task.setDeadline(task.getDeadline().plusDays(1));
-            // Set the status to OVERDUE
-            task.setStatus("OVERDUE");
-            return taskRepository.save(task);
-        }).orElseThrow(() -> new IllegalArgumentException("Task with ID " + id + " not found"));
+    public void rescheduleOverdueTasks() {
+        List<Task> tasks = taskRepository.findAll();
+        for (Task task : tasks) {
+            if (task.getDeadline().isBefore(LocalDateTime.now()) && task.getStatus() != "COMPLETE") {
+                task.setDeadline(task.getDeadline().plusDays(1));
+                task.setStatus("OVERDUE");
+                taskRepository.save(task); // Save the updated task
+            }
+        }
+    }
+    // Delete all tasks that have a status of COMPLETED
+    public void deleteCompletedTasks() {
+        List<Task> completedTasks = taskRepository.findByStatus(TaskStatus.COMPLETED);
+        taskRepository.deleteAll(completedTasks);
+    }
+    // Adjust the priority of tasks based on the days remaining until the deadline
+    public void adjustPriorityBasedOnDeadline() {
+        List<Task> tasks = taskRepository.findAll();
+        for (Task task : tasks) {
+            long daysUntilDeadline = java.time.Duration.between(LocalDateTime.now(), task.getDeadline()).toDays();    
+            if (daysUntilDeadline <= 1) {
+                task.setPriority(1); // Highest priority
+            } else if (daysUntilDeadline <= 3) {
+                task.setPriority(3);
+            }
+            taskRepository.save(task); // Save the updated task
+        }
+    }
+     // Scheduled task to run daily at midnight
+    @Scheduled(cron = "0 30 09 * * ?")
+    public void performDailyTaskManagement() {
+        deleteCompletedTasks();
+        rescheduleOverdueTasks();
+        adjustPriorityBasedOnDeadline();
     }
 }

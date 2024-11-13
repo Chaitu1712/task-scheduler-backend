@@ -1,5 +1,9 @@
-package com.scheduler.task_scheduler_backend;
+package com.scheduler.task_scheduler_backend.model;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,18 +15,27 @@ public class Task {
     private Long id;
     
     @Column(nullable = false)
+    @NotBlank(message = "Title is required")
     private String title;
     
     private String description;
     
     @Column(nullable = false)
+    @Future(message = "Deadline must be a future date")
     private LocalDateTime deadline;
     
     @Column(nullable = false)
+    @Min(1)
+    @Max(10)
     private int priority;
     
+    public enum TaskStatus {
+        PENDING, COMPLETED, OVERDUE
+    }
+    
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private TaskStatus status;
 
     // Constructors
     public Task(long index,String title, String description, int priority, LocalDateTime deadline) {
@@ -31,7 +44,7 @@ public class Task {
         this.description = description;
         this.priority = priority;
         this.deadline = deadline;
-        this.status = "Pending"; // Default status
+        this.status = TaskStatus.PENDING;
     }
 
     public Task(String title, String description, int priority, LocalDateTime deadline,  String status) {
@@ -39,7 +52,7 @@ public class Task {
         this.description = description;
         this.deadline = deadline;
         this.priority = priority;
-        this.status = status;
+        this.status = TaskStatus.valueOf(status.toUpperCase());
     }
 
     // Getters and Setters
@@ -84,11 +97,11 @@ public class Task {
     }
 
     public String getStatus() {
-        return status;
+        return status.toString();
     }
 
     public void setStatus(String status) {
-        this.status = status;
+        this.status = TaskStatus.valueOf(status.toUpperCase());
     }
 
     // toString Method

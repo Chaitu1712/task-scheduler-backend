@@ -1,6 +1,7 @@
 package com.scheduler.task_scheduler_backend.controller;
 
 import com.scheduler.task_scheduler_backend.model.Task;
+import com.scheduler.task_scheduler_backend.model.Task.TaskStatus;
 import com.scheduler.task_scheduler_backend.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -63,14 +64,14 @@ public class TaskController {
 
     // Get tasks by status
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable String status) {
+    public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable TaskStatus status) {
         List<Task> tasks = taskService.getTasksByStatus(status);
         return new ResponseEntity<>(tasks, HttpStatus.OK);
     }
 
     // Update the status of a task
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Task> updateTaskStatus(@PathVariable Long id, @RequestBody String status) {
+    public ResponseEntity<Task> updateTaskStatus(@PathVariable Long id, @RequestBody TaskStatus status) {
         try {
             Task updatedTask = taskService.updateTaskStatus(id, status);
             return new ResponseEntity<>(updatedTask, HttpStatus.OK);

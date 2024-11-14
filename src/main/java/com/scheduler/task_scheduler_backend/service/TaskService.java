@@ -1,5 +1,8 @@
 package com.scheduler.task_scheduler_backend.service;
 
+import com.scheduler.task_scheduler_backend.model.Notification;
+import com.scheduler.task_scheduler_backend.repository.NotificationRepository;
+import com.scheduler.task_scheduler_backend.model.Notification.NotificationStatus;
 import com.scheduler.task_scheduler_backend.model.Task;
 import com.scheduler.task_scheduler_backend.model.Task.TaskStatus;
 import com.scheduler.task_scheduler_backend.repository.TaskRepository;
@@ -15,10 +18,12 @@ import java.util.Optional;
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final NotificationRepository notificationRepository;
 
-    @Autowired
-    public TaskService(TaskRepository taskRepository) {
+   @Autowired
+    public TaskService(TaskRepository taskRepository, NotificationRepository notificationRepository) {
         this.taskRepository = taskRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     // Create a new task
@@ -38,7 +43,7 @@ public class TaskService {
             task.setDescription(updatedTask.getDescription());
             task.setDeadline(updatedTask.getDeadline());
             task.setPriority(updatedTask.getPriority());
-            task.setStatus(updatedTask.getStatus());
+            task.setStatus(TaskStatus.valueOf(updatedTask.getStatus()));
             return taskRepository.save(task);
         }).orElseThrow(() -> new IllegalArgumentException("Task with ID " + id + " not found"));
     }
@@ -54,13 +59,12 @@ public class TaskService {
     }
 
     // Find tasks by status (e.g., PENDING, COMPLETED)
-    public List<Task> getTasksByStatus(String s) {
-        TaskStatus status = TaskStatus.valueOf(s.toUpperCase());
+    public List<Task> getTasksByStatus(TaskStatus status) {
         return taskRepository.findByStatus(status);
     }
 
     // Update the status of a task
-    public Task updateTaskStatus(Long id, String status) {
+    public Task updateTaskStatus(Long id, TaskStatus status) {
         return taskRepository.findById(id).map(task -> {
             task.setStatus(status);
             return taskRepository.save(task);
@@ -68,19 +72,25 @@ public class TaskService {
     }
     // Reschedule a task to the next day and set status to OVERDUE
     public void rescheduleOverdueTasks() {
-        List<Task> tasks = taskRepository.findAll();
-        for (Task task : tasks) {
-            if (task.getDeadline().isBefore(LocalDateTime.now()) && task.getStatus() != "COMPLETE") {
+        List<Task> overdueTasks = taskRepository.findAll().stream()
+                .filter(task -> task.getDeadline().isBefore(LocalDateTime.now()) && task.getStatus() != "COMPLETED")
+                .toList();
+
+        for (Task task : overdueTasks) {
                 task.setDeadline(task.getDeadline().plusDays(1));
-                task.setStatus("OVERDUE");
+                task.setStatus(TaskStatus.OVERDUE);
                 taskRepository.save(task); // Save the updated task
-            }
+                createNotification("Task '" + task.getTitle() + "' was rescheduled because it became overdue.");
         }
     }
     // Delete all tasks that have a status of COMPLETED
     public void deleteCompletedTasks() {
-        List<Task> completedTasks = taskRepository.findByStatus(TaskStatus.COMPLETED);
-        taskRepository.deleteAll(completedTasks);
+       List<Task> completedTasks = taskRepository.findByStatus(TaskStatus.COMPLETED);
+        for (Task task : completedTasks) {
+            taskRepository.delete(task);
+            createNotification("Task '" + task.getTitle() + "' was removed because it was completed.");
+        }
+
     }
     // Adjust the priority of tasks based on the days remaining until the deadline
     public void adjustPriorityBasedOnDeadline() {
@@ -101,5 +111,9 @@ public class TaskService {
         deleteCompletedTasks();
         rescheduleOverdueTasks();
         adjustPriorityBasedOnDeadline();
+    }
+    private void createNotification(String message) {
+        Notification notification = new Notification(message, LocalDateTime.now(),NotificationStatus.UNREAD);
+        notificationRepository.save(notification);
     }
 }

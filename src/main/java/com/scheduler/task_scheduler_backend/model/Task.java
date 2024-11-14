@@ -47,12 +47,12 @@ public class Task {
         this.status = TaskStatus.PENDING;
     }
 
-    public Task(String title, String description, int priority, LocalDateTime deadline,  String status) {
+    public Task(String title, String description, int priority, LocalDateTime deadline,  TaskStatus status) {
         this.title = title;
         this.description = description;
         this.deadline = deadline;
         this.priority = priority;
-        this.status = TaskStatus.valueOf(status.toUpperCase());
+        this.status = status;
     }
 
     // Getters and Setters
@@ -100,8 +100,8 @@ public class Task {
         return status.toString();
     }
 
-    public void setStatus(String status) {
-        this.status = TaskStatus.valueOf(status.toUpperCase());
+    public void setStatus(TaskStatus status) {
+        this.status = status;
     }
 
     // toString Method

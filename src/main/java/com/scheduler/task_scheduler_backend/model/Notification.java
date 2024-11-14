@@ -1,9 +1,10 @@
 package com.scheduler.task_scheduler_backend.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "notifications")
 public class Notification {
 
     @Id

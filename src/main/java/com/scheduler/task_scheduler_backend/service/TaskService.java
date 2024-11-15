@@ -43,7 +43,7 @@ public class TaskService {
             task.setDescription(updatedTask.getDescription());
             task.setDeadline(updatedTask.getDeadline());
             task.setPriority(updatedTask.getPriority());
-            task.setStatus(TaskStatus.valueOf(updatedTask.getStatus()));
+            task.setStatus(updatedTask.getStatus());
             return taskRepository.save(task);
         }).orElseThrow(() -> new IllegalArgumentException("Task with ID " + id + " not found"));
     }
@@ -59,12 +59,12 @@ public class TaskService {
     }
 
     // Find tasks by status (e.g., PENDING, COMPLETED)
-    public List<Task> getTasksByStatus(TaskStatus status) {
-        return taskRepository.findByStatus(status);
+    public List<Task> getTasksByStatus(String status) {
+        return taskRepository.findByStatus(TaskStatus.valueOf(status));
     }
 
     // Update the status of a task
-    public Task updateTaskStatus(Long id, TaskStatus status) {
+    public Task updateTaskStatus(Long id, String status) {
         return taskRepository.findById(id).map(task -> {
             task.setStatus(status);
             return taskRepository.save(task);

@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+
+import java.security.PublicKey;
 import java.time.LocalDateTime;
 
 @Entity
@@ -36,10 +38,17 @@ public class Task {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TaskStatus status;
-
+    public Task(){}
     // Constructors
     public Task(long index,String title, String description, int priority, LocalDateTime deadline) {
-        this.id=index;
+        this.id = index;
+        this.title = title;
+        this.description = description;
+        this.priority = priority;
+        this.deadline = deadline;
+        this.status = TaskStatus.PENDING;
+    }
+    public Task(String title, String description, int priority, LocalDateTime deadline) {
         this.title = title;
         this.description = description;
         this.priority = priority;
@@ -100,8 +109,11 @@ public class Task {
         return status.toString();
     }
 
+    public void setStatus(String status) {
+        this.status = TaskStatus.valueOf(status);
+    }
     public void setStatus(TaskStatus status) {
-        this.status = status;
+        this.status =status;
     }
 
     // toString Method

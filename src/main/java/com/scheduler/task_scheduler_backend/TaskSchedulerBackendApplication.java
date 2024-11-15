@@ -17,15 +17,14 @@ public class TaskSchedulerBackendApplication {
 
 	public static void main(String[] args) {
 		startSshTunnel();
-		
+		System.out.println("SSH Connection established successfully. Port forwarding enabled.");
+		System.out.println("Starting Spring Boot Application...");		
 		try {
             Thread.sleep(5000); // 10,000 milliseconds = 10 seconds
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Restore the interrupted status
             System.out.println("Sleep was interrupted: " + e.getMessage());
         }
-		System.out.println("SSH Connection established successfully. Port forwarding enabled.");
-		System.out.println("Starting Spring Boot Application...");
 		SpringApplication.run(TaskSchedulerBackendApplication.class, args);
 	}
 	static void startSshTunnel(){

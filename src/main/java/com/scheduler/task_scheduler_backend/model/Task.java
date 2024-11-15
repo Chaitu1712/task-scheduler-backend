@@ -40,28 +40,12 @@ public class Task {
     private TaskStatus status;
     public Task(){}
     // Constructors
-    public Task(long index,String title, String description, int priority, LocalDateTime deadline) {
-        this.id = index;
-        this.title = title;
-        this.description = description;
-        this.priority = priority;
-        this.deadline = deadline;
-        this.status = TaskStatus.PENDING;
-    }
     public Task(String title, String description, int priority, LocalDateTime deadline) {
         this.title = title;
         this.description = description;
         this.priority = priority;
         this.deadline = deadline;
         this.status = TaskStatus.PENDING;
-    }
-
-    public Task(String title, String description, int priority, LocalDateTime deadline,  TaskStatus status) {
-        this.title = title;
-        this.description = description;
-        this.deadline = deadline;
-        this.priority = priority;
-        this.status = status;
     }
 
     // Getters and Setters

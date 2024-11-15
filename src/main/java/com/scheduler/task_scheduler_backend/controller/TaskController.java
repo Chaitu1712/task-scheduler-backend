@@ -47,8 +47,15 @@ public class TaskController {
 
     // Update a task by ID
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task task) {
+    public ResponseEntity<Task> updateTask(@PathVariable Long id,@RequestBody Map<String, Object> taskData) {
         try {
+            Task temp=taskService.getTaskById(id).get();
+            String t= (String) taskData.get("title")==null?temp.getTitle():(String) taskData.get("title");
+            String d= (String) taskData.get("description")==null?temp.getDescription():(String) taskData.get("description");
+            int p= (int) taskData.get("priority")==0?temp.getPriority():(int) taskData.get("priority");
+            String dl= (String) taskData.get("deadline")==null?temp.getDeadline().toString():(String) taskData.get("deadline");
+            LocalDateTime deadline = LocalDateTime.parse(dl);
+            Task task = new Task(t, d, p, deadline);
             Task updatedTask = taskService.updateTask(id, task);
             return new ResponseEntity<>(updatedTask, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
@@ -67,13 +74,6 @@ public class TaskController {
     @GetMapping
     public ResponseEntity<List<Task>> getAllTasksSorted() {
         List<Task> tasks = taskService.getAllTasksSorted();
-        return new ResponseEntity<>(tasks, HttpStatus.OK);
-    }
-
-    // Get tasks by status
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable String status) {
-        List<Task> tasks = taskService.getTasksByStatus(status);
         return new ResponseEntity<>(tasks, HttpStatus.OK);
     }
 

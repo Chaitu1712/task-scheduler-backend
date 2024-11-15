@@ -79,8 +79,9 @@ public class TaskController {
 
     // Update the status of a task
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Task> updateTaskStatus(@PathVariable Long id, @RequestBody String status) {
+    public ResponseEntity<Task> updateTaskStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         try {
+            String status = body.get("status");
             Task updatedTask = taskService.updateTaskStatus(id, status);
             return new ResponseEntity<>(updatedTask, HttpStatus.OK);
         } catch (IllegalArgumentException e) {

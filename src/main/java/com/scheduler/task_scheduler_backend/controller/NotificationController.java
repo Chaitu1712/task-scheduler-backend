@@ -28,12 +28,6 @@ public class NotificationController {
         return new ResponseEntity<>(notificationRepository.findAll(), HttpStatus.OK);
     }
 
-    // Get unread notifications
-    @GetMapping("/unread")
-    public ResponseEntity<List<Notification>> getUnreadNotifications() {
-        return new ResponseEntity<>(notificationRepository.findByStatus(NotificationStatus.UNREAD), HttpStatus.OK);
-    }
-
     // Mark a notification as read
     @PatchMapping("/{id}/read")
     public ResponseEntity<Notification> markAsRead(@PathVariable Long id) {

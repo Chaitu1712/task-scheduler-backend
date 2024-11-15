@@ -105,12 +105,20 @@ public class TaskService {
             taskRepository.save(task); // Save the updated task
         }
     }
+    //delete notifications marked read
+    public void deleteReadNotifications() {
+        List<Notification> readNotifications = notificationRepository.findByStatus(NotificationStatus.READ);
+        for (Notification notification : readNotifications) {
+            notificationRepository.delete(notification);
+        }
+    }
      // Scheduled task to run daily at midnight
     @Scheduled(cron = "0 30 09 * * ?")
     public void performDailyTaskManagement() {
         deleteCompletedTasks();
         rescheduleOverdueTasks();
         adjustPriorityBasedOnDeadline();
+        deleteReadNotifications();
     }
     private void createNotification(String message) {
         Notification notification = new Notification(message, LocalDateTime.now(),NotificationStatus.UNREAD);

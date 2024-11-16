@@ -16,10 +16,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class TaskSchedulerBackendApplication {
 
 	public static void main(String[] args) {
-		startSshTunnel();
-		System.out.println("SSH Connection established successfully. Port forwarding enabled.");
-		System.out.println("Starting Spring Boot Application...");		
+		startSshTunnel();		
 		try {
+			System.out.println("SSH Connection established successfully. Port forwarding enabled.");
+			System.out.println("Starting Spring Boot Application...");
             Thread.sleep(5000); // 10,000 milliseconds = 10 seconds
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Restore the interrupted status

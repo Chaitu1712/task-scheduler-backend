@@ -54,15 +54,61 @@ public class TaskService {
     }
 
     // List all tasks, sorted by priority and deadline
-    public List<Task> getAllTasksSorted() {
-        return taskRepository.findAllByOrderByPriorityAscDeadlineAsc();
+    public List<Task> getAllTasksSorted(boolean desc) {
+        return desc?taskRepository.findAllByOrderByDeadlineAscPriorityDesc():taskRepository.findAllByOrderByDeadlineAscPriorityAsc();
+    }
+
+    // Find tasks by deadline (e.g., today, tomorrow, this week)
+    public List<Task> getTasksByDeadline(String deadline,boolean desc) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
+        LocalDateTime endOfTomorrow = endOfDay.plusDays(1);
+        LocalDateTime endOfThisWeek = endOfDay.plusDays(7);
+        if(desc){
+            switch (deadline) {
+                case "TODAY":
+                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityDesc(now, endOfDay);
+                case "TOMORROW":
+                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityDesc(endOfDay, endOfTomorrow);
+                case "THIS_WEEK":
+                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityDesc(endOfDay, endOfThisWeek);
+                default:
+                    return List.of();
+            }
+        }
+        else{
+
+            switch (deadline) {
+                case "TODAY":
+                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityAsc(now, endOfDay);
+                case "TOMORROW":
+                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityAsc(endOfDay, endOfTomorrow);
+                case "THIS_WEEK":
+                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityAsc(endOfDay, endOfThisWeek);
+                default:
+                    return List.of();
+            }
+        }
+    }
+
+    // Find tasks by status and deadline
+    public List<Task> getTasksByStatusAndDeadline(String status, String deadline,boolean desc) {
+        List<Task> tasksByStatus = getTasksByStatus(status,desc);
+        List<Task> tasksByDeadline = getTasksByDeadline(deadline,desc);
+        tasksByStatus.retainAll(tasksByDeadline);
+        
+        return tasksByStatus;
     }
 
     // Find tasks by status (e.g., PENDING, COMPLETED)
-    public List<Task> getTasksByStatus(String status) {
-        return taskRepository.findByStatus(TaskStatus.valueOf(status));
+    public List<Task> getTasksByStatus(String status,boolean desc) {
+        if(desc){
+            return taskRepository.findByStatusOrderByDeadlineAscPriorityDesc(TaskStatus.valueOf(status));
+        }
+        else{
+            return taskRepository.findByStatusOrderByDeadlineAscPriorityAsc(TaskStatus.valueOf(status));
+        }
     }
-
     // Update the status of a task
     public Task updateTaskStatus(Long id, String status) {
         return taskRepository.findById(id).map(task -> {
@@ -85,7 +131,7 @@ public class TaskService {
     }
     // Delete all tasks that have a status of COMPLETED
     public void deleteCompletedTasks() {
-       List<Task> completedTasks = taskRepository.findByStatus(TaskStatus.COMPLETED);
+       List<Task> completedTasks = taskRepository.findByStatusOrderByDeadlineAscPriorityAsc(TaskStatus.COMPLETED);
         for (Task task : completedTasks) {
             taskRepository.delete(task);
             createNotification("Task '" + task.getTitle() + "' was removed because it was completed.");
@@ -112,13 +158,26 @@ public class TaskService {
             notificationRepository.delete(notification);
         }
     }
-     // Scheduled task to run daily at midnight
-    @Scheduled(cron = "0 30 09 * * ?")
+    // Notify the user of upcoming deadlines
+    public void notifyUpcomingDeadlines() {
+        List<Task> tasks = taskRepository.findAll();
+        for (Task task : tasks) {
+            long daysUntilDeadline = java.time.Duration.between(LocalDateTime.now(), task.getDeadline()).toDays();
+            if (daysUntilDeadline <=  1) {
+                createNotification("Task '" + task.getTitle() + "' is due tomorrow.");
+            } else if (daysUntilDeadline == 3) {
+                createNotification("Task '" + task.getTitle() + "' is due in three days.");
+            }
+        }
+    }
+     // Scheduled task to run at intervals of one hour
+    @Scheduled(cron = "0 */15 * * * ?")
     public void performDailyTaskManagement() {
         deleteCompletedTasks();
         rescheduleOverdueTasks();
         adjustPriorityBasedOnDeadline();
         deleteReadNotifications();
+        notifyUpcomingDeadlines();
     }
     private void createNotification(String message) {
         Notification notification = new Notification(message, LocalDateTime.now(),NotificationStatus.UNREAD);

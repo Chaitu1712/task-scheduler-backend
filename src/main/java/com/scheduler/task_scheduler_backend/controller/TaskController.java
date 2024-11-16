@@ -70,10 +70,34 @@ public class TaskController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    // Get all tasks, sorted by priority and deadline
+    //get tasks by deadline
+    @GetMapping("/deadline/{deadline}")
+    public ResponseEntity<List<Task>> getTasksByDeadline(@PathVariable String deadline) {
+        List<Task> tasks = taskService.getTasksByDeadline(deadline,false);
+        return new ResponseEntity<>(tasks, HttpStatus.OK);
+    }
+
+    // Get tasks by status
+    @GetMapping("/status")
+    public ResponseEntity<List<Task>> getTasksByStatus(@RequestParam String status) {
+        List<Task> tasks = taskService.getTasksByStatus(status,false);
+        return new ResponseEntity<>(tasks, HttpStatus.OK);
+    }
+    
+    // Get all tasks, optionally filtered by status and/or deadline, sorted by priority and deadline
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasksSorted() {
-        List<Task> tasks = taskService.getAllTasksSorted();
+    public ResponseEntity<List<Task>> getAllTasksSorted(@RequestParam(required = false, defaultValue="false") String desc,@RequestParam(required = false) String status, @RequestParam(required = false) String deadline) {
+        List<Task> tasks;
+        boolean descOrder = desc.equals("true");
+        if (status != null && deadline != null) {
+            tasks = taskService.getTasksByStatusAndDeadline(status, deadline,descOrder);
+        } else if (status != null) {
+            tasks = taskService.getTasksByStatus(status,descOrder);
+        } else if (deadline != null) {
+            tasks = taskService.getTasksByDeadline(deadline,descOrder);
+        } else {
+            tasks = taskService.getAllTasksSorted(descOrder);
+        }
         return new ResponseEntity<>(tasks, HttpStatus.OK);
     }
 

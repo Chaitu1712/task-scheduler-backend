@@ -28,23 +28,26 @@ This is the backend service for the Task Scheduler application, built using Spri
 
 ### **1. Clone the Repository**
 
-    bashCopy codegit clone https://github.com/your-username/task-scheduler-backend.gitcd task-scheduler-backend
+   git clone https://github.com/your-username/task-scheduler-backend.gitcd task-scheduler-backend
 
 ### **2. Configure the Application**
 
 - **Database Configuration**:Edit the `application.properties` file in the `src/main/resources` folder:
 
-        propertiesCopy codespring.datasource.url=jdbc:mysql://localhost:3306/task_schedulerspring.datasource.username=your_usernamespring.datasource.password=your_passwordspring.jpa.hibernate.ddl-auto=update
+        spring.datasource.url=jdbc:mysql://localhost:3306/task_scheduler
+        spring.datasource.username=your_username
+        spring.datasource.password=your_password
+        spring.jpa.hibernate.ddl-auto=update
 - **SSH Tunnel**:Ensure the SSH tunnel is configured to connect to the database. You can use tools like `SshTunnelConfig` in the project.
 
 ### **3. Build and Run**
 
 - Build the project:
 
-        bashCopy codemvn clean install
+        mvn clean install
 - Run the application:
 
-        bashCopy codemvn spring-boot:run
+        mvn spring-boot:run
 
 * * *
 
@@ -93,7 +96,7 @@ The `Task` entity uses validation annotations to ensure data integrity:
 
 Unit tests are available for service and repository layers. To run tests:
 
-    bashCopy codemvn test
+    mvn test
 
 * * *
 

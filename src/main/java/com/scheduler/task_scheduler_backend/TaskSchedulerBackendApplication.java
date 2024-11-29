@@ -20,7 +20,7 @@ public class TaskSchedulerBackendApplication {
 		try {
 			System.out.println("SSH Connection established successfully. Port forwarding enabled.");
 			System.out.println("Starting Spring Boot Application...");
-            Thread.sleep(5000); // 10,000 milliseconds = 10 seconds
+            Thread.sleep(5000); // 5,000 milliseconds = 5 seconds
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Restore the interrupted status
             System.out.println("Sleep was interrupted: " + e.getMessage());

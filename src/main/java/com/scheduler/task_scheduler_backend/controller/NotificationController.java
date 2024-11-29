@@ -3,7 +3,6 @@ package com.scheduler.task_scheduler_backend.controller;
 import com.scheduler.task_scheduler_backend.model.Notification;
 import com.scheduler.task_scheduler_backend.model.Notification.NotificationStatus;
 import com.scheduler.task_scheduler_backend.repository.NotificationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,15 +16,14 @@ public class NotificationController {
 
     private final NotificationRepository notificationRepository;
 
-    @Autowired
     public NotificationController(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
     }
 
-    // Get all notifications
-    @GetMapping
-    public ResponseEntity<List<Notification>> getAllNotifications() {
-        return new ResponseEntity<>(notificationRepository.findAll(), HttpStatus.OK);
+    // Get all notifications for a user
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<Notification>> getAllNotifications(@PathVariable Long userId) {
+        return new ResponseEntity<>(notificationRepository.findByUserId(userId), HttpStatus.OK);
     }
 
     // Mark a notification as read

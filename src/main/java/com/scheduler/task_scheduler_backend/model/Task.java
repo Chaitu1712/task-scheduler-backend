@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
-import java.security.PublicKey;
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,6 +29,9 @@ public class Task {
     @Min(1)
     @Max(10)
     private int priority;
+    
+    @Column(nullable = false)
+    private Long userId;
     
     public enum TaskStatus {
         PENDING, COMPLETED, OVERDUE
@@ -87,6 +89,14 @@ public class Task {
 
     public void setPriority(int priority) {
         this.priority = priority;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getStatus() {

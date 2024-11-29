@@ -6,7 +6,6 @@ import com.scheduler.task_scheduler_backend.model.Notification.NotificationStatu
 import com.scheduler.task_scheduler_backend.model.Task;
 import com.scheduler.task_scheduler_backend.model.Task.TaskStatus;
 import com.scheduler.task_scheduler_backend.repository.TaskRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -16,29 +15,28 @@ import java.util.Optional;
 
 @Service
 public class TaskService {
-
     private final TaskRepository taskRepository;
     private final NotificationRepository notificationRepository;
 
-   @Autowired
     public TaskService(TaskRepository taskRepository, NotificationRepository notificationRepository) {
         this.taskRepository = taskRepository;
         this.notificationRepository = notificationRepository;
     }
 
-    // Create a new task
-    public Task createTask(Task task) {
+    // Create a new task for a user
+    public Task createTask(Task task, Long userId) {
+        task.setUserId(userId);
         return taskRepository.save(task);
     }
 
-    // Read or get a task by ID
-    public Optional<Task> getTaskById(Long id) {
-        return taskRepository.findById(id);
+    // Get a task by ID and user ID
+    public Optional<Task> getTaskById(Long id, Long userId) {
+        return taskRepository.findByIdAndUserId(id, userId);
     }
 
-    // Update an existing task
-    public Task updateTask(Long id, Task updatedTask) {
-        return taskRepository.findById(id).map(task -> {
+    // Update an existing task for a user
+    public Task updateTask(Long id, Task updatedTask, Long userId) {
+        return taskRepository.findByIdAndUserId(id, userId).map(task -> {
             task.setTitle(updatedTask.getTitle());
             task.setDescription(updatedTask.getDescription());
             task.setDeadline(updatedTask.getDeadline());
@@ -49,100 +47,95 @@ public class TaskService {
     }
 
     // Delete a task by ID
-    public void deleteTask(Long id) {
-        taskRepository.deleteById(id);
+    public void deleteTask(Long id, Long userId) {
+        taskRepository.deleteByIdAndUserId(id, userId);
     }
 
-    // List all tasks, sorted by priority and deadline
-    public List<Task> getAllTasksSorted(boolean desc) {
-        return desc?taskRepository.findAllByOrderByDeadlineAscPriorityDesc():taskRepository.findAllByOrderByDeadlineAscPriorityAsc();
+    // List all tasks for a user, sorted by priority and deadline
+    public List<Task> getAllTasksSorted(Long userId, boolean desc) {
+        return desc ? taskRepository.findAllByUserIdOrderByDeadlineAscPriorityDesc(userId) : taskRepository.findAllByUserIdOrderByDeadlineAscPriorityAsc(userId);
     }
 
-    // Find tasks by deadline (e.g., today, tomorrow, this week)
-    public List<Task> getTasksByDeadline(String deadline,boolean desc) {
+    // Find tasks by deadline for a user
+    public List<Task> getTasksByDeadline(Long userId, String deadline, boolean desc) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
         LocalDateTime endOfTomorrow = endOfDay.plusDays(1);
         LocalDateTime endOfThisWeek = endOfDay.plusDays(7);
-        if(desc){
+        if (desc) {
             switch (deadline) {
                 case "TODAY":
-                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityDesc(now, endOfDay);
+                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityDesc(userId, now, endOfDay);
                 case "TOMORROW":
-                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityDesc(endOfDay, endOfTomorrow);
+                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityDesc(userId, endOfDay, endOfTomorrow);
                 case "THIS_WEEK":
-                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityDesc(endOfDay, endOfThisWeek);
+                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityDesc(userId, endOfDay, endOfThisWeek);
                 default:
                     return List.of();
             }
-        }
-        else{
-
+        } else {
             switch (deadline) {
                 case "TODAY":
-                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityAsc(now, endOfDay);
+                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityAsc(userId, now, endOfDay);
                 case "TOMORROW":
-                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityAsc(endOfDay, endOfTomorrow);
+                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityAsc(userId, endOfDay, endOfTomorrow);
                 case "THIS_WEEK":
-                    return taskRepository.findByDeadlineBetweenOrderByDeadlineAscPriorityAsc(endOfDay, endOfThisWeek);
+                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityAsc(userId, endOfDay, endOfThisWeek);
                 default:
                     return List.of();
             }
         }
     }
 
-    // Find tasks by status and deadline
-    public List<Task> getTasksByStatusAndDeadline(String status, String deadline,boolean desc) {
-        List<Task> tasksByStatus = getTasksByStatus(status,desc);
-        List<Task> tasksByDeadline = getTasksByDeadline(deadline,desc);
+    // Find tasks by status and deadline for a user
+    public List<Task> getTasksByStatusAndDeadline(Long userId, String status, String deadline, boolean desc) {
+        List<Task> tasksByStatus = getTasksByStatus(userId, status, desc);
+        List<Task> tasksByDeadline = getTasksByDeadline(userId, deadline, desc);
         tasksByStatus.retainAll(tasksByDeadline);
-        
         return tasksByStatus;
     }
 
-    // Find tasks by status (e.g., PENDING, COMPLETED)
-    public List<Task> getTasksByStatus(String status,boolean desc) {
-        if(desc){
-            return taskRepository.findByStatusOrderByDeadlineAscPriorityDesc(TaskStatus.valueOf(status));
-        }
-        else{
-            return taskRepository.findByStatusOrderByDeadlineAscPriorityAsc(TaskStatus.valueOf(status));
-        }
+    // Find tasks by status for a user
+    public List<Task> getTasksByStatus(Long userId, String status, boolean desc) {
+        return desc ? taskRepository.findByUserIdAndStatusOrderByDeadlineAscPriorityDesc(userId, TaskStatus.valueOf(status)) : taskRepository.findByUserIdAndStatusOrderByDeadlineAscPriorityAsc(userId, TaskStatus.valueOf(status));
     }
-    // Update the status of a task
-    public Task updateTaskStatus(Long id, String status) {
-        return taskRepository.findById(id).map(task -> {
-            task.setStatus(status);
+
+    // Update the status of a task for a user
+    public Task updateTaskStatus(Long id, String status, Long userId) {
+        return taskRepository.findByIdAndUserId(id, userId).map(task -> {
+            task.setStatus(TaskStatus.valueOf(status));
             return taskRepository.save(task);
         }).orElseThrow(() -> new IllegalArgumentException("Task with ID " + id + " not found"));
     }
+
     // Reschedule a task to the next day and set status to OVERDUE
     public void rescheduleOverdueTasks() {
         List<Task> overdueTasks = taskRepository.findAll().stream()
-                .filter(task -> task.getDeadline().isBefore(LocalDateTime.now()) && task.getStatus() != "COMPLETED")
+                .filter(task -> task.getDeadline().isBefore(LocalDateTime.now()) && !task.getStatus().equals(TaskStatus.COMPLETED))
                 .toList();
 
         for (Task task : overdueTasks) {
-                task.setDeadline(task.getDeadline().plusDays(1));
-                task.setStatus(TaskStatus.OVERDUE);
-                taskRepository.save(task); // Save the updated task
-                createNotification("Task '" + task.getTitle() + "' was rescheduled because it became overdue.");
+            task.setDeadline(task.getDeadline().plusDays(1));
+            task.setStatus(TaskStatus.OVERDUE);
+            taskRepository.save(task); // Save the updated task
+            createNotification("Task '" + task.getTitle() + "' was rescheduled because it became overdue.", task.getUserId());
         }
     }
-    // Delete all tasks that have a status of COMPLETED
+
+    // Delete all tasks that have a status of COMPLETED for a user
     public void deleteCompletedTasks() {
-       List<Task> completedTasks = taskRepository.findByStatusOrderByDeadlineAscPriorityAsc(TaskStatus.COMPLETED);
+        List<Task> completedTasks = taskRepository.findByStatus(TaskStatus.COMPLETED);
         for (Task task : completedTasks) {
             taskRepository.delete(task);
-            createNotification("Task '" + task.getTitle() + "' was removed because it was completed.");
+            createNotification("Task '" + task.getTitle() + "' was removed because it was completed.", task.getUserId());
         }
-
     }
+
     // Adjust the priority of tasks based on the days remaining until the deadline
     public void adjustPriorityBasedOnDeadline() {
         List<Task> tasks = taskRepository.findAll();
         for (Task task : tasks) {
-            long daysUntilDeadline = java.time.Duration.between(LocalDateTime.now(), task.getDeadline()).toDays();    
+            long daysUntilDeadline = java.time.Duration.between(LocalDateTime.now(), task.getDeadline()).toDays();
             if (daysUntilDeadline <= 1) {
                 task.setPriority(1); // Highest priority
             } else if (daysUntilDeadline <= 3) {
@@ -151,26 +144,29 @@ public class TaskService {
             taskRepository.save(task); // Save the updated task
         }
     }
-    //delete notifications marked read
+
+    // Delete notifications marked as read
     public void deleteReadNotifications() {
         List<Notification> readNotifications = notificationRepository.findByStatus(NotificationStatus.READ);
         for (Notification notification : readNotifications) {
             notificationRepository.delete(notification);
         }
     }
+
     // Notify the user of upcoming deadlines
     public void notifyUpcomingDeadlines() {
         List<Task> tasks = taskRepository.findAll();
         for (Task task : tasks) {
             long daysUntilDeadline = java.time.Duration.between(LocalDateTime.now(), task.getDeadline()).toDays();
-            if (daysUntilDeadline <=  1) {
-                createNotification("Task '" + task.getTitle() + "' is due tomorrow.");
+            if (daysUntilDeadline <= 1) {
+                createNotification("Task '" + task.getTitle() + "' is due tomorrow.", task.getUserId());
             } else if (daysUntilDeadline == 3) {
-                createNotification("Task '" + task.getTitle() + "' is due in three days.");
+                createNotification("Task '" + task.getTitle() + "' is due in three days.", task.getUserId());
             }
         }
     }
-     // Scheduled task to run at intervals of one hour
+
+    // Scheduled task to run at intervals of one hour
     @Scheduled(cron = "0 */15 * * * ?")
     public void performDailyTaskManagement() {
         deleteCompletedTasks();
@@ -179,8 +175,9 @@ public class TaskService {
         deleteReadNotifications();
         notifyUpcomingDeadlines();
     }
-    private void createNotification(String message) {
-        Notification notification = new Notification(message, LocalDateTime.now(),NotificationStatus.UNREAD);
+
+    private void createNotification(String message, Long userId) {
+        Notification notification = new Notification(message, LocalDateTime.now(), NotificationStatus.UNREAD, userId);
         notificationRepository.save(notification);
     }
 }

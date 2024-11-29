@@ -11,34 +11,71 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String message;
+
+    @Column(nullable = false)
     private LocalDateTime timestamp;
+
+    @Column(nullable = false)
+    private Long userId;
+
     public enum NotificationStatus {
-        UNREAD,
-        READ
+        UNREAD, READ
     }
+
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private NotificationStatus status;
 
-    public Notification() {
-    }
+    // Constructors
+    public Notification() {}
 
-    public Notification(String message, LocalDateTime timestamp, NotificationStatus status) {
+    public Notification(String message, LocalDateTime timestamp, NotificationStatus status, Long userId) {
         this.message = message;
         this.timestamp = timestamp;
         this.status = status;
+        this.userId = userId;
     }
 
-    // Getters and setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    public String getMessage() {
+        return message;
+    }
 
-    public String getStatus() { return status.toString(); }
-    public void setStatus(NotificationStatus status) { this.status= status; }
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public NotificationStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(NotificationStatus status) {
+        this.status = status;
+    }
 }

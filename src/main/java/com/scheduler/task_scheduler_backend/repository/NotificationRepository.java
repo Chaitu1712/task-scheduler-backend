@@ -14,5 +14,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByUserId(Long userId);
     List<Notification> findByStatus(NotificationStatus status);
     // Custom query method to find notifications by status
-    List<Notification> findByUserIdByStatus(Long userId,NotificationStatus status);
+    List<Notification> findByUserIdAndStatus(Long userId, NotificationStatus status);
 }

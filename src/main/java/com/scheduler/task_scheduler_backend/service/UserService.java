@@ -1,4 +1,3 @@
-
 package com.scheduler.task_scheduler_backend.service;
 
 import com.scheduler.task_scheduler_backend.model.User;

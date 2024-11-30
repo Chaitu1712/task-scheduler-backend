@@ -1,9 +1,10 @@
 package com.scheduler.task_scheduler_backend.repository;
 
-import com.scheduler.task_scheduler_backend.model.Notification;
-import com.scheduler.task_scheduler_backend.model.Notification.NotificationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.scheduler.task_scheduler_backend.model.Notification;
+import com.scheduler.task_scheduler_backend.model.Notification.NotificationStatus;
 
 import java.util.List;
 

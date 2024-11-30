@@ -1,9 +1,9 @@
 package com.scheduler.task_scheduler_backend.service;
 
-import com.scheduler.task_scheduler_backend.model.Notification;
 import com.scheduler.task_scheduler_backend.repository.NotificationRepository;
-import com.scheduler.task_scheduler_backend.model.Notification.NotificationStatus;
+import com.scheduler.task_scheduler_backend.model.Notification;
 import com.scheduler.task_scheduler_backend.model.Task;
+import com.scheduler.task_scheduler_backend.model.Notification.NotificationStatus;
 import com.scheduler.task_scheduler_backend.model.Task.TaskStatus;
 import com.scheduler.task_scheduler_backend.repository.TaskRepository;
 import org.springframework.scheduling.annotation.Scheduled;

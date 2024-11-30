@@ -1,4 +1,3 @@
-
 package com.scheduler.task_scheduler_backend.controller;
 
 import com.scheduler.task_scheduler_backend.model.User;
@@ -34,15 +33,19 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody Map<String, String> loginData) {
+    public ResponseEntity<Map<String, Object>> loginUser(@RequestBody Map<String, String> loginData) {
         String username = loginData.get("username");
         String password = loginData.get("password");
 
         Optional<User> userOptional = userService.findByUsername(username);
         if (userOptional.isPresent() && passwordEncoder.matches(password, userOptional.get().getPassword())) {
-            return new ResponseEntity<>("Login successful", HttpStatus.OK);
+            Map<String, Object> response = Map.of(
+                "message", "Login successful",
+                "userId", userOptional.get().getId()
+            );
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(Map.of("message", "Invalid credentials"), HttpStatus.UNAUTHORIZED);
         }
     }
 }

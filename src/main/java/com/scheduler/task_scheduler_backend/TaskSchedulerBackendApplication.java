@@ -46,30 +46,40 @@ public class TaskSchedulerBackendApplication {
 	        command.add(user + "@" + host);
 			System.out.println("Starting SSH Tunnel...");
         	ProcessBuilder processBuilder = new ProcessBuilder(command);
-        	try {
-            Process process = processBuilder.start();
+        	while (true) {
+        		try {
+            		Process process = processBuilder.start();
 
-            // Capture output and error streams
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);  // Print output
-            }
+            		// Capture output and error streams
+            		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            		String line;
+            		while ((line = reader.readLine()) != null) {
+                		System.out.println(line);  // Print output
+            		}
 
-            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            while ((line = errorReader.readLine()) != null) {
-                System.err.println(line);  // Print errors
-            }
+            		BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            		while ((line = errorReader.readLine()) != null) {
+                		System.err.println(line);  // Print errors
+            		}
 
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                System.out.println("Port forwarding established successfully.");
-            } else {
-                System.out.println("Error: Port forwarding failed with exit code " + exitCode);
-            }
-        	} catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
+            		int exitCode = process.waitFor();
+            		if (exitCode == 0) {
+                		System.out.println("Port forwarding established successfully.");
+                		break;
+            		} else {
+                		System.out.println("Error: Port forwarding failed with exit code " + exitCode);
+            		}
+        		} catch (IOException | InterruptedException e) {
+            		e.printStackTrace();
+        		}
+        		System.out.println("Retrying SSH Tunnel...");
+        		try {
+            		Thread.sleep(5000); // Wait for 5 seconds before retrying
+        		} catch (InterruptedException e) {
+            		Thread.currentThread().interrupt(); // Restore the interrupted status
+            		System.out.println("Sleep was interrupted: " + e.getMessage());
+        		}
+        	}
 		});
 		sshTunnelThread.setDaemon(true);
 		sshTunnelThread.start();

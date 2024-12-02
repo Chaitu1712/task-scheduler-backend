@@ -28,6 +28,7 @@ public class UserController {
         if (userService.findByUsername(user.getUsername()).isPresent()) {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // Encode the password
         User registeredUser = userService.registerUser(user);
         return new ResponseEntity<>(registeredUser, HttpStatus.CREATED);
     }
@@ -41,11 +42,19 @@ public class UserController {
         if (userOptional.isPresent() && passwordEncoder.matches(password, userOptional.get().getPassword())) {
             Map<String, Object> response = Map.of(
                 "message", "Login successful",
-                "userId", userOptional.get().getId()
+                "userId", userOptional.get().getId(),
+                "username", userOptional.get().getUsername()
+
             );
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(Map.of("message", "Invalid credentials"), HttpStatus.UNAUTHORIZED);
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logoutUser() {
+        // Implement logout logic if needed (e.g., invalidate session, token, etc.)
+        return new ResponseEntity<>(Map.of("message", "Logout successful"), HttpStatus.OK);
     }
 }

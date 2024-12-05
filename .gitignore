@@ -8,3 +8,4 @@ target/
 .vscode/
 src/main/resources/Free_Tier.pem
 src/main/resources/application.properties
+/logs

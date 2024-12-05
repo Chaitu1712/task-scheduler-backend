@@ -177,7 +177,13 @@ public class TaskService {
     }
 
     private void createNotification(String message, Long userId) {
-        Notification notification = new Notification(message, LocalDateTime.now(), NotificationStatus.UNREAD, userId);
-        notificationRepository.save(notification);
+        List<Notification> existingNotifications = notificationRepository.findByUserIdAndStatus(userId, NotificationStatus.UNREAD);
+        boolean notificationExists = existingNotifications.stream()
+                .anyMatch(notification -> notification.getMessage().equals(message));
+
+        if (!notificationExists) {
+            Notification notification = new Notification(message, LocalDateTime.now(), NotificationStatus.UNREAD, userId);
+            notificationRepository.save(notification);
+        }
     }
 }

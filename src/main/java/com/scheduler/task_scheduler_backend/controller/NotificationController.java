@@ -3,6 +3,7 @@ package com.scheduler.task_scheduler_backend.controller;
 import com.scheduler.task_scheduler_backend.model.Notification;
 import com.scheduler.task_scheduler_backend.model.Notification.NotificationStatus;
 import com.scheduler.task_scheduler_backend.repository.NotificationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ public class NotificationController {
 
     private final NotificationRepository notificationRepository;
 
+    @Autowired
     public NotificationController(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
     }

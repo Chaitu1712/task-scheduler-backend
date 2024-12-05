@@ -8,15 +8,18 @@ import com.scheduler.task_scheduler_backend.model.Task.TaskStatus;
 import com.scheduler.task_scheduler_backend.repository.TaskRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @Service
 public class TaskService {
     private final TaskRepository taskRepository;
     private final NotificationRepository notificationRepository;
+    private static final Logger logger = Logger.getLogger(TaskService.class.getName());
 
     public TaskService(TaskRepository taskRepository, NotificationRepository notificationRepository) {
         this.taskRepository = taskRepository;
@@ -47,57 +50,55 @@ public class TaskService {
     }
 
     // Delete a task by ID
+    @Transactional
     public void deleteTask(Long id, Long userId) {
-        taskRepository.deleteByIdAndUserId(id, userId);
+        try {
+            Optional<Task> task = taskRepository.findByIdAndUserId(id, userId);
+            if (task.isPresent()) {
+                taskRepository.deleteByIdAndUserId(id, userId);
+            } else {
+                throw new IllegalArgumentException("Task with ID " + id + " not found for user ID " + userId);
+            }
+        } catch (Exception e) {
+            logger.severe("Error deleting task with ID " + id + " for user ID " + userId + ": " + e.getMessage());
+            throw e;
+        }
     }
 
-    // List all tasks for a user, sorted by priority and deadline
-    public List<Task> getAllTasksSorted(Long userId, boolean desc) {
-        return desc ? taskRepository.findAllByUserIdOrderByDeadlineAscPriorityDesc(userId) : taskRepository.findAllByUserIdOrderByDeadlineAscPriorityAsc(userId);
+    // List all tasks for a user
+    public List<Task> getAllTasks(Long userId) {
+        return taskRepository.findAllByUserIdOrderByDeadlineAscPriorityAsc(userId);
     }
 
     // Find tasks by deadline for a user
-    public List<Task> getTasksByDeadline(Long userId, String deadline, boolean desc) {
+    public List<Task> getTasksByDeadline(Long userId, String deadline) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
         LocalDateTime endOfTomorrow = endOfDay.plusDays(1);
         LocalDateTime endOfThisWeek = endOfDay.plusDays(7);
-        if (desc) {
-            switch (deadline) {
-                case "TODAY":
-                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityDesc(userId, now, endOfDay);
-                case "TOMORROW":
-                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityDesc(userId, endOfDay, endOfTomorrow);
-                case "THIS_WEEK":
-                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityDesc(userId, endOfDay, endOfThisWeek);
-                default:
-                    return List.of();
-            }
-        } else {
-            switch (deadline) {
-                case "TODAY":
-                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityAsc(userId, now, endOfDay);
-                case "TOMORROW":
-                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityAsc(userId, endOfDay, endOfTomorrow);
-                case "THIS_WEEK":
-                    return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityAsc(userId, endOfDay, endOfThisWeek);
-                default:
-                    return List.of();
-            }
+        switch (deadline) {
+            case "TODAY":
+                return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityAsc(userId, now, endOfDay);
+            case "TOMORROW":
+                return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityAsc(userId, endOfDay, endOfTomorrow);
+            case "THIS_WEEK":
+                return taskRepository.findByUserIdAndDeadlineBetweenOrderByDeadlineAscPriorityAsc(userId, endOfDay, endOfThisWeek);
+            default:
+                return List.of();
         }
     }
 
     // Find tasks by status and deadline for a user
-    public List<Task> getTasksByStatusAndDeadline(Long userId, String status, String deadline, boolean desc) {
-        List<Task> tasksByStatus = getTasksByStatus(userId, status, desc);
-        List<Task> tasksByDeadline = getTasksByDeadline(userId, deadline, desc);
+    public List<Task> getTasksByStatusAndDeadline(Long userId, String status, String deadline) {
+        List<Task> tasksByStatus = getTasksByStatus(userId, status);
+        List<Task> tasksByDeadline = getTasksByDeadline(userId, deadline);
         tasksByStatus.retainAll(tasksByDeadline);
         return tasksByStatus;
     }
 
     // Find tasks by status for a user
-    public List<Task> getTasksByStatus(Long userId, String status, boolean desc) {
-        return desc ? taskRepository.findByUserIdAndStatusOrderByDeadlineAscPriorityDesc(userId, TaskStatus.valueOf(status)) : taskRepository.findByUserIdAndStatusOrderByDeadlineAscPriorityAsc(userId, TaskStatus.valueOf(status));
+    public List<Task> getTasksByStatus(Long userId, String status) {
+        return taskRepository.findByUserIdAndStatusOrderByDeadlineAscPriorityAsc(userId, TaskStatus.valueOf(status));
     }
 
     // Update the status of a task for a user
@@ -124,7 +125,7 @@ public class TaskService {
 
     // Delete all tasks that have a status of COMPLETED for a user
     public void deleteCompletedTasks() {
-        List<Task> completedTasks = taskRepository.findByStatus(TaskStatus.COMPLETED);
+        List<Task> completedTasks = taskRepository.findByStatusOrderByDeadlineAscPriorityAsc(TaskStatus.COMPLETED);
         for (Task task : completedTasks) {
             taskRepository.delete(task);
             createNotification("Task '" + task.getTitle() + "' was removed because it was completed.", task.getUserId());

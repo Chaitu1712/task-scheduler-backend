@@ -64,37 +64,42 @@ public class TaskController {
     // Delete a task by ID and user ID
     @DeleteMapping("/{userId}/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long userId, @PathVariable Long id) {
-        taskService.deleteTask(id, userId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        try {
+            taskService.deleteTask(id, userId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // Get tasks by deadline for a user
     @GetMapping("/{userId}/deadline/{deadline}")
     public ResponseEntity<List<Task>> getTasksByDeadline(@PathVariable Long userId, @PathVariable String deadline) {
-        List<Task> tasks = taskService.getTasksByDeadline(userId, deadline, false);
+        List<Task> tasks = taskService.getTasksByDeadline(userId, deadline);
         return new ResponseEntity<>(tasks, HttpStatus.OK);
     }
 
     // Get tasks by status for a user
     @GetMapping("/{userId}/status")
     public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable Long userId, @RequestParam String status) {
-        List<Task> tasks = taskService.getTasksByStatus(userId, status, false);
+        List<Task> tasks = taskService.getTasksByStatus(userId, status);
         return new ResponseEntity<>(tasks, HttpStatus.OK);
     }
 
-    // Get all tasks for a user, optionally filtered by status and/or deadline, sorted by priority and deadline
+    // Get all tasks for a user, optionally filtered by status and/or deadline
     @GetMapping("/{userId}")
-    public ResponseEntity<List<Task>> getAllTasksSorted(@PathVariable Long userId, @RequestParam(required = false, defaultValue="false") String desc, @RequestParam(required = false) String status, @RequestParam(required = false) String deadline) {
+    public ResponseEntity<List<Task>> getAllTasks(@PathVariable Long userId, @RequestParam(required = false) String status, @RequestParam(required = false) String deadline) {
         List<Task> tasks;
-        boolean descOrder = desc.equals("true");
         if (status != null && deadline != null) {
-            tasks = taskService.getTasksByStatusAndDeadline(userId, status, deadline, descOrder);
+            tasks = taskService.getTasksByStatusAndDeadline(userId, status, deadline);
         } else if (status != null) {
-            tasks = taskService.getTasksByStatus(userId, status, descOrder);
+            tasks = taskService.getTasksByStatus(userId, status);
         } else if (deadline != null) {
-            tasks = taskService.getTasksByDeadline(userId, deadline, descOrder);
+            tasks = taskService.getTasksByDeadline(userId, deadline);
         } else {
-            tasks = taskService.getAllTasksSorted(userId, descOrder);
+            tasks = taskService.getAllTasks(userId);
         }
         return new ResponseEntity<>(tasks, HttpStatus.OK);
     }

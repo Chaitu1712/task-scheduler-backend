@@ -24,11 +24,23 @@ This is the backend service for the Task Scheduler application, built using Spri
 
 * * *
 
+### **Dependencies**
+
+The project uses the following key dependencies:
+- `Spring Boot Starter Data JPA`
+- `Spring Boot Starter Web`
+- `Spring Boot Starter Security`
+- `MySQL Connector/J`
+- `JSCH` for SSH connections
+
+* * *
+
 ## **Project Setup**
 
 ### **1. Clone the Repository**
 
-   git clone https://github.com/your-username/task-scheduler-backend.gitcd task-scheduler-backend
+   git clone https://github.com/your-username/task-scheduler-backend.gitcd 
+   cd task-scheduler-backend
 
 ### **2. Configure the Application**
 
@@ -49,6 +61,11 @@ This is the backend service for the Task Scheduler application, built using Spri
 
         mvn spring-boot:run
 
+### **4. Security Configuration**
+
+The application uses Spring Security for basic security configuration. The `SecurityConfig` class disables CORS and CSRF and permits all requests. Passwords are encoded using `BCryptPasswordEncoder`.
+
+
 * * *
 
 ## **API Endpoints**
@@ -57,28 +74,34 @@ This is the backend service for the Task Scheduler application, built using Spri
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| GET | `/api/tasks` | Get all tasks |
-| GET | `/api/tasks/{id}` | Get task by ID |
-| POST | `/api/tasks` | Create a new task |
-| PUT | `/api/tasks/{id}` | Update task details |
-| DELETE | `/api/tasks/{id}` | Delete a task by ID |
+| GET | `/api/tasks/{userId}` | Get all tasks for a user |
+| GET | `/api/tasks/{userId}/{id}` | Get task by ID and user ID |
+| POST | `/api/tasks/{userId}` | Create a new task for a user |
+| PUT | `/api/tasks/{userId}/{id}` | Update task details by ID and user ID |
+| DELETE | `/api/tasks/{userId}/{id}` | Delete a task by ID and user ID |
+| GET | `/api/tasks/{userId}/deadline/{deadline}` | Get tasks by deadline for a user |
+| GET | `/api/tasks/{userId}/status` | Get tasks by status for a user |
+| PATCH | `/api/tasks/{userId}/{id}/status` | Update the status of a task for a user |
 
 ### **Notification Endpoint**
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| GET | `/api/notifications` | Get all notifications |
+| GET | `/api/notifications/{userId}` | Get all notifications for a user |
+| PATCH | `/api/notifications/{id}/read` | Mark a notification as read |
 
 * * *
 
 ## **Development Notes**
 
+
 ### **Scheduled Tasks**
 
-- Automatic functions are scheduled to run daily at midnight:
-    - Rescheduling overdue tasks.
-    - Auto-deletion of completed tasks.
-    - Day-based priority updates.
+The application includes scheduled tasks that run hourly:
+- Reschedule overdue tasks.
+- Auto-delete completed tasks.
+- Update task priorities based on deadlines.
+- Auto-delete read notifications
 
 ### **Validation**
 
@@ -86,19 +109,12 @@ The `Task` entity uses validation annotations to ensure data integrity:
 
 - `@NotBlank` for required fields.
 - `@FutureOrPresent` for deadlines.
+- `@Email` for valid email addresses in `User`.
 - Enum for task status with a default value of `PENDING`.
 
 * * *
 
-## **Testing**
 
-### **Unit Tests**
-
-Unit tests are available for service and repository layers. To run tests:
-
-    mvn test
-
-* * *
 
 ## **Contributing**
 
